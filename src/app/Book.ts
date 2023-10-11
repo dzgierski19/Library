@@ -4,7 +4,7 @@ import { userId } from "./User";
 
 export type ISBN = string;
 
-class Book {
+export class Book {
   ISBN: string = this.generateRandomISBN2017();
   Category: BookCategory;
   Author: string;
@@ -101,7 +101,7 @@ class Book {
   }
 }
 
-const ElonMusk = new Book(
+export const ElonMusk = new Book(
   BOOK_CATEGORY.BIOGRAPHY,
   "WALTER ISAACSON",
   "ELON MUSK",

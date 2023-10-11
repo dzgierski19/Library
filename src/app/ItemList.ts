@@ -1,4 +1,4 @@
-class ItemList<T, U> {
+export class ItemList<T, U> {
   list: Map<T, U> = new Map();
 
   constructor(private readonly itemType = "Book" || "User") {}
