@@ -1,5 +1,8 @@
 import { BOOK_CATEGORY, BookCategory } from "./BookCategory";
 import { BOOK_LANGUAGE, BookLanguage } from "./BookLanguage";
+import { userId } from "./User";
+
+export type ISBN = string;
 
 class Book {
   ISBN: string = this.generateRandomISBN2017();
@@ -9,6 +12,8 @@ class Book {
   NumberOfPages: number;
   YearOfPublication: number;
   Language: BookLanguage;
+  BorrowedBy?: userId;
+  BorrowedDate?: Date;
 
   constructor(
     category: BookCategory,
@@ -20,12 +25,20 @@ class Book {
   ) {
     this.Category = category;
     this.Author = author;
+    this.isStringEmpty(this.Author);
     this.Title = title;
+    this.isStringEmpty(this.Title);
     this.NumberOfPages = numberOfPages;
     this.isNumberOfPagesInRange(this.NumberOfPages);
     this.YearOfPublication = yearOfPublication;
     this.isPublicationYearInRange(this.YearOfPublication);
     this.Language = language;
+  }
+
+  private isStringEmpty(str: string): void {
+    if (str.length === 0) {
+      throw new Error("Please type something");
+    }
   }
 
   private isPublicationYearInRange(yearOfPublication: number) {
@@ -49,7 +62,7 @@ class Book {
     if (/^\d{3}-\d{2}-\d{4}-\d{3}-\d{1}$/.test(fullNum)) {
       return fullNum;
     }
-    throw new Error("Bad check");
+    throw new Error("Bad ISBN number");
   }
 
   private generateRandom12Numbers() {
@@ -88,12 +101,12 @@ class Book {
   }
 }
 
-const HarryPotter = new Book(
-  BOOK_CATEGORY.ECONOMICS,
-  "RYAN HOLIDAY",
-  "EGO IS YOUR ENEMY",
+const ElonMusk = new Book(
+  BOOK_CATEGORY.BIOGRAPHY,
+  "WALTER ISAACSON",
+  "ELON MUSK",
   310,
-  2022,
+  2023,
   BOOK_LANGUAGE.ENGLISH
 );
-console.log(HarryPotter);
+console.log(ElonMusk);
