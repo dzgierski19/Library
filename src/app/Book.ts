@@ -4,16 +4,16 @@ import { userId } from "./User";
 
 export type ISBN = string;
 
+//rozszerzyc do librarybook
+
 export class Book {
   ISBN: string = this.generateRandomISBN2017();
-  Category: BookCategory;
-  Author: string;
-  Title: string;
-  NumberOfPages: number;
-  YearOfPublication: number;
-  Language: BookLanguage;
-  BorrowedBy?: userId;
-  BorrowedDate?: Date;
+  category: BookCategory;
+  author: string;
+  title: string;
+  numberOfPages: number;
+  yearOfPublication: number;
+  language: BookLanguage;
 
   constructor(
     category: BookCategory,
@@ -23,16 +23,16 @@ export class Book {
     yearOfPublication: number,
     language: BookLanguage
   ) {
-    this.Category = category;
-    this.Author = author;
-    this.isStringEmpty(this.Author);
-    this.Title = title;
-    this.isStringEmpty(this.Title);
-    this.NumberOfPages = numberOfPages;
-    this.isNumberOfPagesInRange(this.NumberOfPages);
-    this.YearOfPublication = yearOfPublication;
-    this.isPublicationYearInRange(this.YearOfPublication);
-    this.Language = language;
+    this.category = category;
+    this.isStringEmpty(author);
+    this.author = author;
+    this.isStringEmpty(title);
+    this.title = title;
+    this.isNumberOfPagesInRange(numberOfPages);
+    this.numberOfPages = numberOfPages;
+    this.isPublicationYearInRange(yearOfPublication);
+    this.yearOfPublication = yearOfPublication;
+    this.language = language;
   }
 
   private isStringEmpty(str: string): void {
@@ -40,6 +40,8 @@ export class Book {
       throw new Error("Please type something");
     }
   }
+
+  private;
 
   private isPublicationYearInRange(yearOfPublication: number) {
     if (yearOfPublication > 2023) {
@@ -72,6 +74,8 @@ export class Book {
     }
     return random12Numbers;
   }
+
+  //Array.from
 
   private sum12Numbers(ISBN12Numbers: number[]) {
     return ISBN12Numbers.reduce((acc, element, index) => {
@@ -109,4 +113,3 @@ export const ElonMusk = new Book(
   2023,
   BOOK_LANGUAGE.ENGLISH
 );
-console.log(ElonMusk);
