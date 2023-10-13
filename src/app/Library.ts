@@ -24,6 +24,12 @@ class Library {
       });
       this.bookingList.deleteOne(bookingId);
     }
+    if (action === "return") {
+      booking.booksToReturn.list.forEach((element) => {
+        this.booklist.getOne(element.ISBN).borrowDate = null;
+        this.booklist.getOne(element.ISBN).borrowedBy = null;
+      });
+    }
   }
 
   private isBookBorrowed(ISBN: string) {
@@ -48,9 +54,12 @@ const newBookingList = new BookingList();
 const newUser = new User(clock);
 newUserList.addOne(newUser.id, newUser);
 const newBooking = new Booking(newBookList, newUser.id);
-newBookingList.addOne(newBooking.userId, newBooking);
+newBookingList.addOne(newBooking.id, newBooking);
 newBooking.borrowBook(ElonMusk.ISBN);
 const newLibrary = new Library(newBookList, newUserList, newBookingList);
-newLibrary.realizeBooking(newBooking.userId, "borrow"); //
-
+newLibrary.realizeBooking(newBooking.id, "borrow");
+const newBooking2 = new Booking(newBookList, newUser.id);
+newBookingList.addOne(newBooking2.id, newBooking2);
+newBooking2.returnBook(ElonMusk.ISBN);
+newLibrary.realizeBooking(newBooking2.id, "return");
 console.dir(newLibrary, { depth: null });
