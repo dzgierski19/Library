@@ -12,7 +12,7 @@ export class ItemList<T, U> {
     this.list.delete(itemId);
   }
 
-  getOne(itemId: T): U | undefined {
+  getOne(itemId: T): U {
     this.isItemAvailable(itemId);
     return this.list.get(itemId);
   }
