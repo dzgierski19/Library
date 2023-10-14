@@ -1,7 +1,14 @@
-import { BOOK_CATEGORY, BookCategory } from "./BookCategory";
-import { BOOK_LANGUAGE, BookLanguage } from "./BookLanguage";
+import { BookCategory } from "./BookCategory";
+import { BookLanguage } from "./BookLanguage";
+import { clock } from "./Clock";
 
 export type ISBN = string;
+
+const MIN_NUMBERS_OF_PAGES = 1;
+const MAX_NUMBERS_OF_PAGES = 21450;
+
+const MIN_YEAR_OF_PUBLICATION = -400;
+const MAX_YEAR_OF_PUBLICATION = clock().getFullYear();
 
 export class Book {
   ISBN: string = this.generateRandomISBN2017();
@@ -25,9 +32,17 @@ export class Book {
     this.author = author;
     this.isStringEmpty(title);
     this.title = title;
-    this.isNumberOfPagesInRange(numberOfPages);
+    this.isNumberInRange(
+      MIN_NUMBERS_OF_PAGES,
+      MAX_NUMBERS_OF_PAGES,
+      numberOfPages
+    );
     this.numberOfPages = numberOfPages;
-    this.isPublicationYearInRange(yearOfPublication);
+    this.isNumberInRange(
+      MIN_YEAR_OF_PUBLICATION,
+      MAX_YEAR_OF_PUBLICATION,
+      yearOfPublication
+    );
     this.yearOfPublication = yearOfPublication;
     this.language = language;
   }
@@ -38,15 +53,13 @@ export class Book {
     }
   }
 
-  private isPublicationYearInRange(yearOfPublication: number) {
-    if (yearOfPublication > 2023) {
-      throw new Error("Publication year must be before 2023");
-    }
-  }
-
-  private isNumberOfPagesInRange(numberOfPages: number): void {
-    if (numberOfPages <= 0 || numberOfPages > 10710) {
-      throw new Error("Number of pages must be between 1 and 10710");
+  private isNumberInRange(
+    numberMin: number,
+    numberMax: number,
+    providedNumber: number
+  ): void {
+    if (providedNumber < numberMin || providedNumber > numberMax) {
+      throw new Error(`Number must be in range: ${numberMin} to ${numberMax}`);
     }
   }
 
