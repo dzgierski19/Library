@@ -1,7 +1,7 @@
 export class ItemList<T, U> {
   list: Map<T, U> = new Map();
 
-  constructor(private readonly itemType = "Book" || "User") {}
+  constructor(private readonly itemType = "Book" || "User" || "Booking") {}
 
   addOne(itemId: T, item: U): void {
     this.list.set(itemId, item);
