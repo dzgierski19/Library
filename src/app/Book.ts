@@ -76,9 +76,7 @@ export class Book {
   }
 
   private generateRandom12Numbers() {
-    return Array.from({ length: 12 }, (element) =>
-      Math.floor(Math.random() * 10)
-    );
+    return Array.from({ length: 12 }, () => Math.floor(Math.random() * 10));
   }
 
   private sum12Numbers(ISBN12Numbers: number[]) {
