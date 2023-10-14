@@ -3,7 +3,7 @@ import { BookList } from "./BookList";
 import { userId } from "./User";
 import { randomUUID } from "crypto";
 
-const ALLOWED_DAYS_TO_KEEP_THE_BOOK = 10;
+export const ALLOWED_DAYS_TO_KEEP_THE_BOOK = 10;
 
 export type BookingId = string;
 
@@ -26,5 +26,3 @@ export class Booking {
     this.booksToReturn.addOne(ISBN, book);
   }
 }
-
-//date-fns
