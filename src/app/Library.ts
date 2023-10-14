@@ -1,11 +1,16 @@
 import { BookList } from "./BookList";
-import { ALLOWED_DAYS_TO_KEEP_THE_BOOK, Booking, BookingId } from "./Booking";
+import {
+  AMOUNT_OF_ALLOWED_DAYS_TO_KEEP_THE_BOOK_FROM_LIBRARY,
+  AMOUNT_OF_LIBRARY_BAN_DAYS,
+  Booking,
+  BookingId,
+} from "./Booking";
 import { BookingList } from "./BookingList";
 import { Clock, clock } from "./Clock";
 import { LibraryBook, ElonMusk, AlbertEinstein } from "./LibraryBook";
 import { User, userId } from "./User";
 import { UserList } from "./UserList";
-import { differenceInDays } from "date-fns";
+import { addDays, differenceInDays } from "date-fns";
 
 class Library {
   constructor(
@@ -22,8 +27,12 @@ class Library {
     book.forEach((element) => this.bookList.deleteOne(element.ISBN));
   }
 
-  getBook(...book: LibraryBook[]) {
-    book.forEach((element) => this.bookList.getOne(element.ISBN));
+  showBook(book: LibraryBook) {
+    return this.bookList.getOne(book.ISBN);
+  }
+
+  showBooks(...book: LibraryBook[]) {
+    return book.map((element) => this.bookList.getOne(element.ISBN));
   }
 
   addUser(...user: User[]) {
@@ -34,8 +43,12 @@ class Library {
     user.forEach((element) => this.userList.deleteOne(element.id));
   }
 
-  getUser(...user: User[]) {
-    user.forEach((element) => this.userList.getOne(element.id));
+  showUser(user: User) {
+    return this.userList.getOne(user.id);
+  }
+
+  showUsers(...user: User[]) {
+    return user.map((element) => this.userList.getOne(element.id));
   }
 
   addBooking(...booking: Booking[]) {
@@ -46,41 +59,46 @@ class Library {
     booking.forEach((element) => this.bookingList.deleteOne(element.id));
   }
 
-  getBooking(...booking: Booking[]) {
-    booking.forEach((element) => this.bookingList.getOne(element.id));
+  showBooking(booking: Booking) {
+    return this.bookingList.getOne(booking.id);
   }
 
-  executeBooking(
-    bookingId: BookingId,
-    action: "return" | "borrow",
-    clock: Clock
-  ) {
+  showBookings(...booking: Booking[]) {
+    return booking.map((element) => this.bookingList.getOne(element.id));
+  }
+
+  executeBookReturn(bookingId: BookingId, clock: Clock) {
     const booking = this.bookingList.getOne(bookingId);
     const user = this.userList.getOne(booking.userId);
     this.isUserBanned(user.id);
-    if (action === "borrow") {
-      booking.booksToBorrow.list.forEach((element) => {
-        const book = this.bookList.getOne(element.ISBN);
-        this.isBookBorrowed(element.ISBN);
-        book.borrowDate = new Date();
-        book.borrowedBy = booking.userId;
-      });
-      this.bookingList.deleteOne(bookingId);
-    }
-    if (action === "return") {
-      booking.booksToReturn.list.forEach((element) => {
-        this.calculatePenaltyPoints(
-          new Date(),
-          new Date(2023, 10, 1),
-          ALLOWED_DAYS_TO_KEEP_THE_BOOK,
-          user
-        );
-        const book = this.bookList.getOne(element.ISBN);
-        book.borrowDate = null;
-        book.borrowedBy = null;
-      });
-      this.bookingList.deleteOne(bookingId);
-    }
+    booking.booksToReturn.list.forEach((element) => {
+      const book = this.bookList.getOne(element.ISBN);
+      if (book.borrowedBy !== user.id) {
+        throw new Error("Book is not borrowed by this user");
+      }
+      this.calculatePenaltyPoints(
+        clock(),
+        element.borrowDate,
+        AMOUNT_OF_ALLOWED_DAYS_TO_KEEP_THE_BOOK_FROM_LIBRARY,
+        user
+      );
+      book.borrowDate = undefined;
+      book.borrowedBy = undefined;
+    });
+    this.bookingList.deleteOne(bookingId);
+  }
+
+  executeBookBorrow(bookingId: BookingId, clock: Clock) {
+    const booking = this.bookingList.getOne(bookingId);
+    const user = this.userList.getOne(booking.userId);
+    this.isUserBanned(user.id);
+    booking.booksToBorrow.list.forEach((element) => {
+      const book = this.bookList.getOne(element.ISBN);
+      this.isBookBorrowed(element.ISBN);
+      book.borrowDate = clock();
+      book.borrowedBy = booking.userId;
+    });
+    this.bookingList.deleteOne(bookingId);
   }
 
   private calculatePenaltyPoints(
@@ -91,7 +109,27 @@ class Library {
   ) {
     const daysDifference = differenceInDays(date1, date2);
     if (daysDifference > range) {
-      user.penaltyPoints = daysDifference - range;
+      if (!user.penaltyPoints) {
+        user.penaltyPoints = 0;
+        user.penaltyPoints += daysDifference - range;
+        this.calculateLibraryBan(user);
+        return;
+      }
+      user.penaltyPoints += daysDifference - range;
+      this.calculateLibraryBan(user);
+      return;
+    }
+  }
+
+  private calculateLibraryBan(user: User) {
+    if (
+      user.penaltyPoints > AMOUNT_OF_ALLOWED_DAYS_TO_KEEP_THE_BOOK_FROM_LIBRARY
+    ) {
+      const banDate = clock();
+      const bannedUntilDate = addDays(banDate, AMOUNT_OF_LIBRARY_BAN_DAYS);
+      const bannedDays = differenceInDays(bannedUntilDate, banDate);
+      user.banDays = bannedDays;
+      user.penaltyPoints = 0;
     }
   }
 
@@ -104,30 +142,48 @@ class Library {
 
   private isUserBanned(userId: userId) {
     const user = this.userList.getOne(userId);
-    if (user.penaltyPoints > 10) {
+    if (user.banDays > 0) {
       throw new Error("User is banned");
     }
   }
 }
+const clock2: Clock = () => new Date(2023, 9, 10);
+const clock3: Clock = () => new Date(2023, 6, 23);
+const clock4: Clock = () => new Date(2023, 6, 8);
+const clock5: Clock = () => new Date(2023, 6, 29);
 
 const newBookList = new BookList();
-newBookList.addOne(ElonMusk.ISBN, ElonMusk);
 const newUserList = new UserList();
 const newBookingList = new BookingList();
-const newUser = new User(clock);
-newUserList.addOne(newUser.id, newUser);
-const newBooking = new Booking(newBookList, newUser.id);
-newBookingList.addOne(newBooking.id, newBooking);
-newBooking.borrowBook(ElonMusk.ISBN);
 const newLibrary = new Library(newBookList, newUserList, newBookingList);
-newLibrary.executeBooking(newBooking.id, "borrow", clock);
-const newBooking2 = new Booking(newBookList, newUser.id);
-newBookingList.addOne(newBooking2.id, newBooking2);
-newBooking2.returnBook(ElonMusk.ISBN);
-newLibrary.executeBooking(newBooking2.id, "return", clock);
 newLibrary.addBook(ElonMusk, AlbertEinstein);
+const newUser = new User(clock);
+newLibrary.addUser(newUser);
+const booking = new Booking(newBookList, newUser.id);
+newLibrary.addBooking(booking);
+booking.borrowBook(ElonMusk.ISBN);
+newLibrary.executeBookBorrow(booking.id, clock);
+const booking2 = new Booking(newBookList, newUser.id);
+newLibrary.addBooking(booking2);
+booking2.returnBook(ElonMusk.ISBN);
+newLibrary.executeBookReturn(booking2.id, clock);
+const booking3 = new Booking(newBookList, newUser.id);
+newLibrary.addBooking(booking3);
+booking3.borrowBook(AlbertEinstein.ISBN);
+newLibrary.executeBookBorrow(booking3.id, clock);
+const booking4 = new Booking(newBookList, newUser.id);
+newLibrary.addBooking(booking4);
+booking4.returnBook(AlbertEinstein.ISBN);
+newLibrary.executeBookReturn(booking4.id, clock);
+
 console.dir(newLibrary, { depth: null });
 
-// osobno return
-// zmienic na clock
-// sprawdzic RANGE
+// const booking2 = new Booking(newBookList, newUser.id);
+// newLibrary.addBooking(booking2);
+// booking2.returnBook(book.ISBN);
+// newLibrary.executeBookReturn(booking2.id, clock2);
+// const bookin3 = new Booking(newBookList, newUser.id);
+// newLibrary.addBooking(bookin3);
+// bookin3.borrowBook(book.ISBN);
+// newLibrary.executeBookBorrow(bookin3.id, clock3);
+// console.dir(newLibrary, { depth: null });
