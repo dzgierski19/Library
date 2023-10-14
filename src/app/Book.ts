@@ -1,10 +1,7 @@
 import { BOOK_CATEGORY, BookCategory } from "./BookCategory";
 import { BOOK_LANGUAGE, BookLanguage } from "./BookLanguage";
-import { userId } from "./User";
 
 export type ISBN = string;
-
-//rozszerzyc do librarybook
 
 export class Book {
   ISBN: string = this.generateRandomISBN2017();
@@ -40,8 +37,6 @@ export class Book {
       throw new Error("Please type something");
     }
   }
-
-  private;
 
   private isPublicationYearInRange(yearOfPublication: number) {
     if (yearOfPublication > 2023) {
@@ -104,12 +99,3 @@ export class Book {
     }, "");
   }
 }
-
-export const ElonMusk = new Book(
-  BOOK_CATEGORY.BIOGRAPHY,
-  "WALTER ISAACSON",
-  "ELON MUSK",
-  310,
-  2023,
-  BOOK_LANGUAGE.ENGLISH
-);
