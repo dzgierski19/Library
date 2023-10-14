@@ -3,7 +3,8 @@ import { BookList } from "./BookList";
 import { userId } from "./User";
 import { randomUUID } from "crypto";
 
-export const ALLOWED_DAYS_TO_KEEP_THE_BOOK = 10;
+export const AMOUNT_OF_ALLOWED_DAYS_TO_KEEP_THE_BOOK_FROM_LIBRARY = 20;
+export const AMOUNT_OF_LIBRARY_BAN_DAYS = 30;
 
 export type BookingId = string;
 
