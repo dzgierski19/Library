@@ -63,14 +63,10 @@ export class Book {
   }
 
   private generateRandom12Numbers() {
-    const random12Numbers: number[] = [];
-    while (random12Numbers.length < 12) {
-      random12Numbers.push(Math.floor(Math.random() * 10));
-    }
-    return random12Numbers;
+    return Array.from({ length: 12 }, (element) =>
+      Math.floor(Math.random() * 10)
+    );
   }
-
-  //Array.from
 
   private sum12Numbers(ISBN12Numbers: number[]) {
     return ISBN12Numbers.reduce((acc, element, index) => {
