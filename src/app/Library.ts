@@ -12,7 +12,7 @@ import { User, userId } from "./User";
 import { UserList } from "./UserList";
 import { addDays, differenceInDays } from "date-fns";
 
-class Library {
+export class Library {
   constructor(
     private readonly bookList: BookList,
     private readonly userList: UserList,
@@ -152,31 +152,32 @@ const clock3: Clock = () => new Date(2023, 6, 23);
 const clock4: Clock = () => new Date(2023, 6, 8);
 const clock5: Clock = () => new Date(2023, 6, 29);
 
-const newBookList = new BookList();
-const newUserList = new UserList();
-const newBookingList = new BookingList();
-const newLibrary = new Library(newBookList, newUserList, newBookingList);
-newLibrary.addBook(ElonMusk, AlbertEinstein);
-const newUser = new User(clock);
-newLibrary.addUser(newUser);
-const booking = new Booking(newBookList, newUser.id);
-newLibrary.addBooking(booking);
-booking.borrowBook(ElonMusk.ISBN);
-newLibrary.executeBookBorrow(booking.id, clock);
-const booking2 = new Booking(newBookList, newUser.id);
-newLibrary.addBooking(booking2);
-booking2.returnBook(ElonMusk.ISBN);
-newLibrary.executeBookReturn(booking2.id, clock);
-const booking3 = new Booking(newBookList, newUser.id);
-newLibrary.addBooking(booking3);
-booking3.borrowBook(AlbertEinstein.ISBN);
-newLibrary.executeBookBorrow(booking3.id, clock);
-const booking4 = new Booking(newBookList, newUser.id);
-newLibrary.addBooking(booking4);
-booking4.returnBook(AlbertEinstein.ISBN);
-newLibrary.executeBookReturn(booking4.id, clock);
+// const newBookList = new BookList();
+// const newUserList = new UserList();
+// const newBookingList = new BookingList();
+// const newLibrary = new Library(newBookList, newUserList, newBookingList);
+// newLibrary.addBook(ElonMusk, AlbertEinstein);
+// console.log(newLibrary.showBook(ElonMusk));
+// const newUser = new User(clock);
+// newLibrary.addUser(newUser);
+// const booking = new Booking(newBookList, newUser.id);
+// newLibrary.addBooking(booking);
+// booking.borrowBook(ElonMusk.ISBN);
+// newLibrary.executeBookBorrow(booking.id, clock);
+// const booking2 = new Booking(newBookList, newUser.id);
+// newLibrary.addBooking(booking2);
+// booking2.returnBook(ElonMusk.ISBN);
+// newLibrary.executeBookReturn(booking2.id, clock);
+// const booking3 = new Booking(newBookList, newUser.id);
+// newLibrary.addBooking(booking3);
+// booking3.borrowBook(AlbertEinstein.ISBN);
+// newLibrary.executeBookBorrow(booking3.id, clock);
+// const booking4 = new Booking(newBookList, newUser.id);
+// newLibrary.addBooking(booking4);
+// booking4.returnBook(AlbertEinstein.ISBN);
+// newLibrary.executeBookReturn(booking4.id, clock);
 
-console.dir(newLibrary, { depth: null });
+// console.dir(newLibrary, { depth: null });
 
 // const booking2 = new Booking(newBookList, newUser.id);
 // newLibrary.addBooking(booking2);
