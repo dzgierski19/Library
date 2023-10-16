@@ -1,9 +1,10 @@
+import { addDays } from "date-fns/esm";
 import { BOOK_CATEGORY } from "../app/BookCategory";
 import { BOOK_LANGUAGE } from "../app/BookLanguage";
 import { BookList } from "../app/BookList";
 import { Booking } from "../app/Booking";
 import { BookingList } from "../app/BookingList";
-import { Clock, clock } from "../app/Clock";
+import { clock } from "../app/Clock";
 import { Library } from "../app/Library";
 import { LibraryBook } from "../app/LibraryBook";
 import { User } from "../app/User";
@@ -14,7 +15,6 @@ describe("Library test suite", () => {
   let bookList: BookList;
   let bookingList: BookingList;
   let library: Library;
-  let clock: Clock;
   let user: User;
   let elonMusk: LibraryBook;
   let booking: Booking;
@@ -25,7 +25,6 @@ describe("Library test suite", () => {
     bookList = new BookList();
     bookingList = new BookingList();
     library = new Library(bookList, userList, bookingList);
-    clock = () => new Date(2023, 9, 14);
     user = new User(clock);
     elonMusk = new LibraryBook(
       BOOK_CATEGORY.BIOGRAPHY,
@@ -74,17 +73,22 @@ describe("Library test suite", () => {
     expect([...bookingList.list.values()]).toHaveLength(0);
   });
   describe("returning and borrowing book test suite", () => {
-    let booksBorrowDate: Clock;
-    let albertEinsteinDateReturn: Clock;
-    let steveJobsDateReturn: Clock;
+    let booksBorrowDate: Date;
+    let albertEinsteinDateReturn: Date;
+    let steveJobsDateReturn: Date;
+    let albertEinsteinDateReturnAfterAllowedTime: Date;
     let returnalbertEinstein: Booking;
     let borrowSteveJobs: Booking;
     let returnSteveJobs: Booking;
     let steveJobs: LibraryBook;
+    //
+    let mockBorrow: Date;
     beforeEach(() => {
-      booksBorrowDate = () => new Date(2023, 8, 1);
-      albertEinsteinDateReturn = () => new Date(2023, 8, 26);
-      steveJobsDateReturn = () => new Date(2023, 8, 27);
+      booksBorrowDate = new Date(2023, 8, 1);
+      albertEinsteinDateReturn = new Date(2023, 8, 26);
+      steveJobsDateReturn = new Date(2023, 8, 27);
+      albertEinsteinDateReturnAfterAllowedTime = new Date(2023, 9, 28);
+
       steveJobs = new LibraryBook(
         BOOK_CATEGORY.BIOGRAPHY,
         "WALTER ISAACSON",
@@ -102,7 +106,7 @@ describe("Library test suite", () => {
     });
     it("should execute borrowing book", () => {
       expect(albertEinstein.borrowedBy).toEqual(user.id);
-      expect(albertEinstein.borrowDate).toEqual(booksBorrowDate());
+      expect(albertEinstein.borrowDate).toEqual(booksBorrowDate);
       expect([...bookingList.list.values()]).toHaveLength(0);
     });
     it("should execute returning book and add penalty points if book is not returned in time", () => {
@@ -122,14 +126,6 @@ describe("Library test suite", () => {
         returnalbertEinstein.id,
         albertEinsteinDateReturn
       );
-    });
-    it("should execute returning book and ban user if book is kept for more time than allowed", () => {
-      returnalbertEinstein.returnBook(albertEinstein.ISBN);
-      library.addBooking(returnalbertEinstein);
-      library.executeBookReturn(
-        returnalbertEinstein.id,
-        albertEinsteinDateReturn
-      );
       library.addBook(steveJobs);
       library.addBooking(borrowSteveJobs);
       borrowSteveJobs.borrowBook(steveJobs.ISBN);
@@ -138,6 +134,67 @@ describe("Library test suite", () => {
       returnSteveJobs.returnBook(steveJobs.ISBN);
       library.executeBookReturn(returnSteveJobs.id, steveJobsDateReturn);
       expect(user.penaltyPoints).toBe(11);
+    });
+    it("should execute returning book and ban user if book is kept for more time than allowed", () => {
+      returnalbertEinstein.returnBook(albertEinstein.ISBN);
+      library.addBooking(returnalbertEinstein);
+      library.executeBookReturn(
+        returnalbertEinstein.id,
+        albertEinsteinDateReturnAfterAllowedTime
+      );
+      expect(albertEinstein.borrowedBy).toEqual(undefined);
+      expect(user.penaltyPoints).toBe(0);
+      expect(user.banDays).toBe(30);
+    });
+  });
+  let elonMuskBorrowDate: Date;
+  let steveJobs: LibraryBook;
+  let borrowSteveJobs: Booking;
+  describe("it throws an error when", () => {
+    beforeEach(() => {
+      elonMuskBorrowDate = new Date(2023, 8, 1);
+      steveJobs = new LibraryBook(
+        BOOK_CATEGORY.BIOGRAPHY,
+        "WALTER ISAACSON",
+        "STEVE JOBS",
+        400,
+        2006,
+        BOOK_LANGUAGE.ENGLISH
+      );
+      booking.borrowBook(elonMusk.ISBN);
+      library.executeBookBorrow(booking.id, elonMuskBorrowDate);
+      borrowSteveJobs = new Booking(bookList, user.id);
+    });
+
+    it("deleting a book that isn't added to the bookList", () => {
+      function error() {
+        library.deleteBook(albertEinstein);
+      }
+      expect(error).toThrow();
+    });
+    it("borrowing a book that is already borrowed", () => {
+      const elonMuskBorrow = new Booking(bookList, user.id);
+      library.addBooking(elonMuskBorrow);
+      elonMuskBorrow.borrowBook(elonMusk.ISBN);
+      function error() {
+        library.executeBookBorrow(elonMuskBorrow.id, elonMuskBorrowDate);
+      }
+      expect(error).toThrow();
+    });
+    it("user wants to borrow a book during ban time", () => {
+      const returnElonMusk = new Booking(bookList, user.id);
+      returnElonMusk.returnBook(elonMusk.ISBN);
+      library.addBooking(returnElonMusk);
+      const dateAfterAllowed = new Date(2023, 9, 28);
+      library.executeBookReturn(returnElonMusk.id, dateAfterAllowed);
+      library.addBook(steveJobs);
+      library.addBooking(borrowSteveJobs);
+      borrowSteveJobs.borrowBook(steveJobs.ISBN);
+      const dateDuringBan = new Date(2023, 10, 24);
+      function error() {
+        library.executeBookBorrow(borrowSteveJobs.id, dateDuringBan);
+      }
+      expect(error).toThrow();
     });
   });
 });
