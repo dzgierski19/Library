@@ -67,17 +67,17 @@ export class Library {
     return booking.map((element) => this.bookingList.getOne(element.id));
   }
 
-  executeBookReturn(bookingId: BookingId, clock: Clock) {
+  executeBookReturn(bookingId: BookingId, clock: Date) {
     const booking = this.bookingList.getOne(bookingId);
     const user = this.userList.getOne(booking.userId);
-    this.isUserBanned(user.id);
+    this.isUserBanned(user.id, clock);
     booking.booksToReturn.list.forEach((element) => {
       const book = this.bookList.getOne(element.ISBN);
       if (book.borrowedBy !== user.id) {
         throw new Error("Book is not borrowed by this user");
       }
       this.calculatePenaltyPoints(
-        clock(),
+        clock,
         element.borrowDate,
         AMOUNT_OF_ALLOWED_DAYS_TO_KEEP_THE_BOOK_FROM_LIBRARY,
         user
@@ -88,14 +88,14 @@ export class Library {
     this.bookingList.deleteOne(bookingId);
   }
 
-  executeBookBorrow(bookingId: BookingId, clock: Clock) {
+  executeBookBorrow(bookingId: BookingId, clock: Date) {
     const booking = this.bookingList.getOne(bookingId);
     const user = this.userList.getOne(booking.userId);
-    this.isUserBanned(user.id);
+    this.isUserBanned(user.id, clock);
     booking.booksToBorrow.list.forEach((element) => {
       const book = this.bookList.getOne(element.ISBN);
       this.isBookBorrowed(element.ISBN);
-      book.borrowDate = clock();
+      book.borrowDate = clock;
       book.borrowedBy = booking.userId;
     });
     this.bookingList.deleteOne(bookingId);
@@ -112,23 +112,24 @@ export class Library {
       if (!user.penaltyPoints) {
         user.penaltyPoints = 0;
         user.penaltyPoints += daysDifference - range;
-        this.calculateLibraryBan(user);
+        this.calculateLibraryBan(user, date1);
         return;
       }
       user.penaltyPoints += daysDifference - range;
-      this.calculateLibraryBan(user);
+      this.calculateLibraryBan(user, date1);
       return;
     }
   }
 
-  private calculateLibraryBan(user: User) {
+  private calculateLibraryBan(user: User, clock: Date) {
     if (
       user.penaltyPoints > AMOUNT_OF_ALLOWED_DAYS_TO_KEEP_THE_BOOK_FROM_LIBRARY
     ) {
-      const banDate = clock();
+      const banDate = clock;
       const bannedUntilDate = addDays(banDate, AMOUNT_OF_LIBRARY_BAN_DAYS);
       const bannedDays = differenceInDays(bannedUntilDate, banDate);
       user.banDays = bannedDays;
+      user.bannedUntilDate = bannedUntilDate;
       user.penaltyPoints = 0;
     }
   }
@@ -140,11 +141,14 @@ export class Library {
     }
   }
 
-  private isUserBanned(userId: userId) {
+  private isUserBanned(userId: userId, clock: Date) {
     const user = this.userList.getOne(userId);
-    if (user.banDays > 0) {
+    if (differenceInDays(user.bannedUntilDate, clock) > 0) {
+      user.banDays = differenceInDays(user.bannedUntilDate, clock);
+      console.log(user.banDays);
       throw new Error("User is banned");
-    }
+    } else user.banDays = 0;
+    user.bannedUntilDate = undefined;
   }
 }
 const clock2: Clock = () => new Date(2023, 9, 10);
