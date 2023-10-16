@@ -7,6 +7,7 @@ export class User {
   createdAt: Date;
   penaltyPoints?: number;
   banDays?: number;
+  bannedUntilDate?: Date;
   constructor(clock: Clock) {
     this.createdAt = clock();
   }
