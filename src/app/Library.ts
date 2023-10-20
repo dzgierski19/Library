@@ -1,3 +1,4 @@
+import { Book } from "./Book";
 import { BookList } from "./BookList";
 import {
   AMOUNT_OF_ALLOWED_DAYS_TO_KEEP_THE_BOOK_FROM_LIBRARY,
@@ -12,7 +13,23 @@ import { User, userId } from "./User";
 import { UserList } from "./UserList";
 import { addDays, differenceInDays } from "date-fns";
 
-export class Library {
+export interface ILibrary {
+  addBook(...book: LibraryBook[]): void;
+  deleteBook(...book: LibraryBook[]): void;
+  showBook(book: LibraryBook): LibraryBook;
+  showBooks(...book: LibraryBook[]): LibraryBook[];
+  addUser(...user: User[]): void;
+  deleteUser(...user: User[]): void;
+  showUsers(...user: User[]): User[];
+  addBooking(...booking: Booking[]): void;
+  deleteBooking(...booking: Booking[]): void;
+  showBooking(booking: Booking): Booking;
+  showBookings(...booking: Booking[]): Booking[];
+  executeBookBorrow(bookingId: BookingId, clock: Date): void;
+  executeBookReturn(bookingId: BookingId, clock: Date): void;
+}
+
+export class Library implements ILibrary {
   constructor(
     private readonly bookList: BookList,
     private readonly userList: UserList,
